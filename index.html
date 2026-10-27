@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ОРТка даярдык</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--tx:#1b2333;--mut:#667085;--pri:#2457d6;--ok:#1a9b55;--bad:#d92d20;--bd:#dde3ee;box-sizing:border-box}
+@media (prefers-color-scheme:dark){:root{--bg:#10141c;--card:#1a212d;--tx:#eef1f6;--mut:#9aa5b8;--pri:#6c93ff;--ok:#3ecf8e;--bad:#ff6b5f;--bd:#2c3547}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+.wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:20px 16px 110px}
+h1{font-size:1.6rem;margin:8px 0 4px}
+.sub{color:var(--mut);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 16px}
+.chip{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:.95rem}
+.chip.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+button.main{background:var(--pri);color:#fff;border:0;border-radius:10px;padding:12px 20px;font-size:1rem;cursor:pointer}
+button.main:disabled{opacity:.4;cursor:default}
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden;margin-bottom:6px}
+.bar i{display:block;height:100%;background:var(--pri);width:0;transition:width .3s}
+.meta{display:flex;justify-content:space-between;color:var(--mut);font-size:.9rem;margin-bottom:10px}
+.q{font-size:1.15rem;font-weight:600;margin:6px 0 14px}
+.opt{display:block;width:100%;text-align:left;background:var(--card);color:var(--tx);border:1.5px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer;font-size:1rem}
+.opt:hover:not(:disabled){border-color:var(--pri)}
+.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,var(--card))}
+.opt.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,var(--card))}
+.fb{margin:8px 0 14px;padding:12px;border-radius:10px;background:var(--bg);border:1px solid var(--bd)}
+.by{color:var(--mut);font-size:.85rem;margin-top:6px}
+.score{font-size:2.4rem;font-weight:700;text-align:center;margin:8px 0}
+.hidden{display:none}
+input,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit;margin:4px 0 10px}
+label{font-size:.9rem;color:var(--mut)}
+.link{background:none;border:0;color:var(--pri);cursor:pointer;font-size:.95rem;padding:0;text-decoration:underline}
+.help{position:fixed;right:16px;bottom:16px;background:#25d366;color:#fff;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:5}
+.bgq{position:fixed;inset:0;z-index:0;display:flex;align-items:center;justify-content:center;padding:40px 8vw;text-align:center;font-size:clamp(1.8rem,6vw,3.4rem);font-weight:700;line-height:1.3;color:var(--pri);opacity:.1;pointer-events:none;transition:opacity .5s}
+.bgq.out{opacity:0}
+.quote{background:linear-gradient(135deg,var(--pri),#7c4dff);color:#fff;border-radius:14px;padding:16px 18px;margin-bottom:14px;font-size:1.05rem;font-weight:600;text-align:center;transition:opacity .5s}
+.quote.out{opacity:0}
+</style>
+</head>
+<body>
+<div class="bgq" id="bgQuote" aria-hidden="true"></div>
+<div class="wrap">
+  <h1>📘 ОРТка даярдык</h1>
+  <p class="sub">10–11-класстар үчүн онлайн тесттер. Суроого жооп бер, түшүндүрмөнү оку, үйрөн!</p>
+  <div class="quote" id="quoteCard"></div>
+
+  <div id="start" class="card">
+    <b>Сабакты тандаңыз:</b>
+    <div class="chips" id="chips"></div>
+    <button class="main" id="goBtn">Тестти баштоо</button>
+    <p class="sub" id="cnt" style="margin:12px 0 0;font-size:.9rem"></p>
+  </div>
+
+  <div id="quiz" class="card hidden">
+    <div class="bar"><i id="prog"></i></div>
+    <div class="meta"><span id="num"></span><span id="subj"></span></div>
+    <div class="q" id="qtext"></div>
+    <div id="opts"></div>
+    <div id="fb" class="fb hidden"></div>
+    <button class="main" id="nextBtn" disabled>Кийинки</button>
+  </div>
+
+  <div id="result" class="card hidden">
+    <div style="text-align:center">Сиздин жыйынтык</div>
+    <div class="score" id="scoreTxt"></div>
+    <p id="scoreMsg" style="text-align:center"></p>
+    <div style="text-align:center"><button class="main" id="againBtn">Кайра баштоо</button></div>
+  </div>
+
+  <div class="card">
+    <button class="link" id="tBtn">✏️ Өз суроомду кошом (классташтарым да чыгарат)</button>
+    <div id="tPanel" class="hidden" style="margin-top:12px">
+      <label>Сабак</label><input id="aSub" list="subList" maxlength="40" placeholder="Мисалы: Математика"><datalist id="subList"></datalist>
+      <label>Суроонун тексти</label><textarea id="aQ" rows="2" maxlength="300"></textarea>
+      <label>Варианттар (ар бири жаңы саптан, 2–5 вариант)</label><textarea id="aOpts" rows="4"></textarea>
+      <label>Туура жооптун номери (1, 2, 3...)</label><input id="aAns" type="number" min="1" max="5">
+      <label>Түшүндүрмө (милдеттүү эмес)</label><textarea id="aEx" rows="2" maxlength="400"></textarea>
+      <label>Сиздин атыңыз (милдеттүү эмес)</label><input id="aBy" maxlength="40">
+      <button class="main" id="saveBtn">Кошуу</button>
+      <p id="aMsg" class="sub"></p>
+      <p class="sub" style="font-size:.85rem">Суроону жөнөтөр алдында туура жооптун номерин кайра текшериңиз. Кошкон суроо бардык окуучуларга дароо көрүнөт.</p>
+    </div>
+  </div>
+</div>
+
+<a class="help" id="helpBtn" href="#" target="_blank" rel="noopener">🆘 Жардам</a>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ====== ЖӨНДӨӨЛӨР ======
+// 1) Мугалимдин WhatsApp номери (өлкө кодусу менен, "+" жана боштуксуз)
+const TEACHER_PHONE = "996779024678";
+
+// 2) Firebase жөндөөлөрү: Firebase консолунан көчүрүп, ушул жерге жабыштырыңыз
+const firebaseConfig = {
+  apiKey: "AIzaSyCELNWCLXt92Cbe8ldB68phosNz8RUca9I",
+  authDomain: "ort-sayt.firebaseapp.com",
+  projectId: "ort-sayt",
+  storageBucket: "ort-sayt.firebasestorage.app",
+  messagingSenderId: "928679184209",
+  appId: "1:928679184209:web:d054268306a47fb4473570"
+};
+
+// 3) Даяр суроолор (кошумча, милдеттүү эмес). answer — 0дөн башталат: 0 = 1-вариант
+const TESTS = [
+  {subject:"Математика", q:"200дүн 15%ы канчага барабар?", options:["20","30","40","50"], answer:1, explain:"200 × 0,15 = 30."},
+  {subject:"Математика", q:"2x + 6 = 14 теңдемесинде x канчага барабар?", options:["3","4","5","8"], answer:1, explain:"2x = 14 − 6 = 8, демек x = 4."},
+  {subject:"Кыргыз тили", q:"«Китеп» сөзү кайсы сөз түркүмүнө кирет?", options:["Зат атооч","Сын атооч","Этиш","Үстөк"], answer:0, explain:"«Китеп» — нерсени атайт, «эмне?» деген суроого жооп берет, ошондуктан зат атооч."},
+  {subject:"Аналогия", q:"Жазуучу : китеп = сүрөтчү : ?", options:["сүрөт","ыр","ноталар","кино"], answer:0, explain:"Жазуучу китеп жаратат, сүрөтчү сүрөт тартат."},
+  {subject:"Физика", q:"Ылдамдыктын өлчөө бирдиги кайсы?", options:["м","м/с","кг","Н"], answer:1, explain:"Ылдамдык = жол / убакыт, ошондуктан м/с."}
+];
+
+const QUOTES = [
+  "Бүгүн окуган бир барак — эртеңки жеңиштин бир кадамы.",
+  "Билим — байлык, эмгек — бактылуулук.",
+  "Өзүңө ишен, ийгилик жолуңда табылат.",
+  "Ката кетирүүдөн коркпо: ката — үйрөнүүнүн бир бөлүгү.",
+  "Кичине кадам да максатка жакындатат.",
+  "Ар бир суроого жооп бергенде сен дагы күчтүү болосуң.",
+  "Кыйынчылык — өсүүнүн белгиси.",
+  "Тоого чыгуу бир кадамдан башталат.",
+  "Бүгүнкү аракет — эртеңки ийгилик.",
+  "Тырышсаң, жете албаган бийигиң жок."
+];
+
+// ====== КОД ======
+const $ = id => document.getElementById(id);
+const configured = !firebaseConfig.apiKey.startsWith("PASTE");
+let db = null, EXTRA = [];
+if(configured){
+  try{
+    db = getFirestore(initializeApp(firebaseConfig));
+    onSnapshot(query(collection(db,"questions"), orderBy("created","desc"), limit(500)), snap=>{
+      EXTRA = snap.docs.map(d=>d.data());
+      renderChips();
+    }, err=>{ $("aMsg").textContent = "Суроолорду жүктөө мүмкүн болгон жок."; });
+  }catch(e){ db = null; }
+}
+const all = () => TESTS.concat(EXTRA);
+
+let selected = "Баары", list = [], i = 0, score = 0, answered = false;
+
+function renderChips(){
+  const subs = [...new Set(all().map(t=>t.subject))];
+  if(selected!=="Баары" && !subs.includes(selected)) selected = "Баары";
+  $("chips").innerHTML = "";
+  ["Баары"].concat(subs).forEach(s=>{
+    const b = document.createElement("button");
+    b.className = "chip" + (s===selected?" on":"");
+    b.textContent = s;
+    b.onclick = ()=>{ selected = s; renderChips(); };
+    $("chips").appendChild(b);
+  });
+  $("subList").innerHTML = "";
+  subs.forEach(s=>{ const o = document.createElement("option"); o.value = s; $("subList").appendChild(o); });
+  $("cnt").textContent = "Жалпы суроолор: " + all().length;
+}
+function shuffle(a){ a=a.slice(); for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]];} return a; }
+
+function start(){
+  list = shuffle(all().filter(t=>selected==="Баары"||t.subject===selected));
+  if(!list.length){ alert("Бул сабак боюнча суроо жок."); return; }
+  i = 0; score = 0;
+  $("start").classList.add("hidden"); $("result").classList.add("hidden"); $("quiz").classList.remove("hidden");
+  show();
+}
+function show(){
+  const t = list[i]; answered = false;
+  $("num").textContent = "Суроо " + (i+1) + " / " + list.length;
+  $("subj").textContent = t.subject;
+  $("prog").style.width = (i/list.length*100) + "%";
+  $("qtext").textContent = t.q;
+  $("fb").classList.add("hidden");
+  $("nextBtn").disabled = true;
+  $("nextBtn").textContent = i===list.length-1 ? "Жыйынтыкты көрүү" : "Кийинки";
+  $("opts").innerHTML = "";
+  t.options.forEach((o,k)=>{
+    const b = document.createElement("button");
+    b.className = "opt"; b.textContent = String.fromCharCode(65+k) + ")  " + o;
+    b.onclick = ()=>pick(k);
+    $("opts").appendChild(b);
+  });
+  updateHelp();
+}
+function pick(k){
+  if(answered) return; answered = true;
+  const t = list[i], btns = $("opts").children;
+  for(let n=0;n<btns.length;n++){ btns[n].disabled = true; if(n===t.answer) btns[n].classList.add("ok"); }
+  const good = k===t.answer;
+  if(good) score++; else btns[k].classList.add("bad");
+  const fb = $("fb"); fb.classList.remove("hidden");
+  fb.textContent = (good ? "✅ Туура! " : "❌ Ката. Туура жооп: " + String.fromCharCode(65+t.answer) + ". ") + (t.explain||"");
+  if(t.by){ const d = document.createElement("div"); d.className = "by"; d.textContent = "✍️ Суроону кошкон: " + t.by; fb.appendChild(d); }
+  $("nextBtn").disabled = false;
+}
+function next(){
+  if(i < list.length-1){ i++; show(); return; }
+  $("quiz").classList.add("hidden"); $("result").classList.remove("hidden");
+  $("prog").style.width = "100%";
+  const p = Math.round(score/list.length*100);
+  $("scoreTxt").textContent = score + " / " + list.length + " (" + p + "%)";
+  $("scoreMsg").textContent = p>=80 ? "Эң сонун! Ушинтип улантыңыз! 🎉" : p>=50 ? "Жакшы, бирок дагы машыгуу керек. 💪" : "Көбүрөөк даярданыңыз. «Жардам» баскычын басып, мугалимден сураңыз! 📚";
+  updateHelp(true);
+}
+function updateHelp(done){
+  let msg = "Саламатсызбы! ОРТка даярдануу боюнча жардам керек.";
+  if(!done && !$("quiz").classList.contains("hidden") && list[i]) msg += " Суроо: " + list[i].q + " (" + list[i].options.join(" / ") + ")";
+  $("helpBtn").href = "https://wa.me/" + TEACHER_PHONE + "?text=" + encodeURIComponent(msg);
+}
+
+$("goBtn").onclick = start;
+$("nextBtn").onclick = next;
+$("againBtn").onclick = ()=>{ $("result").classList.add("hidden"); $("start").classList.remove("hidden"); renderChips(); updateHelp(true); };
+$("tBtn").onclick = ()=> $("tPanel").classList.toggle("hidden");
+
+$("saveBtn").onclick = async ()=>{
+  const msg = t => { $("aMsg").textContent = t; };
+  if(!db){ msg("Сайт Firebase менен байланышкан эмес. Мугалимге билдириңиз."); return; }
+  const sub = $("aSub").value.trim(), q = $("aQ").value.trim(), ex = $("aEx").value.trim(), by = $("aBy").value.trim();
+  const opts = $("aOpts").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  const ans = parseInt($("aAns").value,10)-1;
+  if(!sub||!q||opts.length<2||opts.length>5||!(ans>=0&&ans<opts.length)){ msg("Бардык талааларды туура толтуруңуз (2–5 вариант, туура жооптун номери)."); return; }
+  if(opts.some(o=>o.length>120)){ msg("Вариант өтө узун (максимум 120 тамга)."); return; }
+  let last = 0; try{ last = +localStorage.getItem("ort_last")||0; }catch(e){}
+  if(Date.now()-last < 30000){ msg("Бир аз күтүңүз, андан кийин кайра кошсоңуз болот."); return; }
+  $("saveBtn").disabled = true; msg("Сакталууда...");
+  try{
+    await addDoc(collection(db,"questions"), {subject:sub, q:q, options:opts, answer:ans, explain:ex, by:by, created:serverTimestamp()});
+    try{ localStorage.setItem("ort_last", String(Date.now())); }catch(e){}
+    ["aQ","aOpts","aAns","aEx"].forEach(x=>$(x).value="");
+    msg("Суроо кошулду ✅ Рахмат!");
+  }catch(e){ msg("Сактоо болгон жок. Интернетти текшерип, кайра аракет кылыңыз."); }
+  $("saveBtn").disabled = false;
+};
+
+let qi = Math.floor(Math.random() * QUOTES.length);
+function showQuote(){
+  const q = QUOTES[qi];
+  $("bgQuote").textContent = q; $("quoteCard").textContent = "«" + q + "»";
+  $("bgQuote").classList.remove("out"); $("quoteCard").classList.remove("out");
+}
+setInterval(()=>{
+  $("bgQuote").classList.add("out"); $("quoteCard").classList.add("out");
+  setTimeout(()=>{ qi = (qi + 1) % QUOTES.length; showQuote(); }, 500);
+}, 9000);
+showQuote();
+renderChips(); updateHelp(true);
+</script>
+</body>
+</html>
